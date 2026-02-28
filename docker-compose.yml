@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack-rroyce
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sns,sqs
+      - DEBUG=0
+      - AWS_DEFAULT_REGION=us-east-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_HOST=localstack-rroyce
+      - MAIN_CONTAINER_NAME=localstack-rroyce
+    volumes:
+      - "./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "localstack_data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  localstack_data:

@@ -1,0 +1,2 @@
+class MissingJWTTokenException(Exception):
+    pass
