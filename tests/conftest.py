@@ -18,21 +18,12 @@ os.environ.setdefault(
     "GITHUB_SNS_TOPIC_ARN",
     "arn:aws:sns:us-east-1:000000000000:github-events",
 )
-os.environ.setdefault(
-    "JIRA_SNS_TOPIC_ARN",
-    "arn:aws:sns:us-east-1:000000000000:jira-events",
-)
 os.environ.setdefault("GITHUB_WEBHOOK_SECRET", "test-github-secret")
-os.environ.setdefault("JIRA_WEBHOOK_SECRET", "test-jira-secret")
 os.environ.setdefault("USE_LOCALSTACK", "true")
 os.environ.setdefault("LOCALSTACK_ENDPOINT", "http://localhost:4566")
 os.environ.setdefault(
     "GITHUB_SQS_QUEUE_URL",
     "http://localhost:4566/000000000000/github-events-queue",
-)
-os.environ.setdefault(
-    "JIRA_SQS_QUEUE_URL",
-    "http://localhost:4566/000000000000/jira-events-queue",
 )
 
 
@@ -40,12 +31,6 @@ os.environ.setdefault(
 def github_secret() -> str:
     """Get GitHub webhook secret for testing."""
     return os.environ["GITHUB_WEBHOOK_SECRET"]
-
-
-@pytest.fixture
-def jira_secret() -> str:
-    """Get Jira webhook secret for testing."""
-    return os.environ["JIRA_WEBHOOK_SECRET"]
 
 
 @pytest.fixture

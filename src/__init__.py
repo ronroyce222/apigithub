@@ -1,1 +1,1 @@
-"""FastAPI webhook server for GitHub and Jira events."""
+"""FastAPI webhook server for GitHub events."""

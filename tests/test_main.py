@@ -31,7 +31,6 @@ class TestCreateApp:
         assert "/health/ready" in routes
         assert "/health/startup" in routes
         assert "/webhooks/github" in routes
-        assert "/webhooks/jira" in routes
 
     def test_app_metadata(self) -> None:
         """Test app metadata."""

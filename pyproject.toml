@@ -1,7 +1,7 @@
 [project]
 name = "aiapi"
 version = "0.1.0"
-description = "Webhook server for GitHub and Jira events"
+description = "Webhook server for GitHub events"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

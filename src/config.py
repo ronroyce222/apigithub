@@ -32,29 +32,14 @@ class Settings(BaseSettings):
         ...,
         description="SNS topic ARN for GitHub events",
     )
-    jira_sns_topic_arn: str = Field(
-        ...,
-        description="SNS topic ARN for Jira events",
-    )
-
     github_sqs_queue_url: str = Field(
         default="",
         description="SQS queue URL for GitHub events",
     )
-    jira_sqs_queue_url: str = Field(
-        default="",
-        description="SQS queue URL for Jira events",
-    )
-
     github_webhook_secret: str = Field(
         ...,
         description="Secret for GitHub webhook signature verification",
     )
-    jira_webhook_secret: str = Field(
-        ...,
-        description="Secret for Jira webhook signature verification",
-    )
-
     localstack_endpoint: str = Field(
         default=None,
         description="LocalStack endpoint URL for testing",

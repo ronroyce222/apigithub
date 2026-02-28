@@ -1,6 +1,6 @@
-# api-webhook
+# apigithub
 
-FastAPI server that receives webhook events from GitHub and Jira,
+FastAPI server that receives webhook events from GitHub,
 validates their signatures, and publishes them to AWS SNS topics for
 downstream processing by
 [svc-pr-code-reviewer](../svc-pr-code-reviewer/).
@@ -22,7 +22,7 @@ full data flow.
 ## Features
 
 - FastAPI-based async webhook receiver
-- HMAC-SHA256 signature verification for GitHub and Jira webhooks
+- HMAC-SHA256 signature verification for GitHub webhooks
 - Async SNS publishing with exponential backoff retry using `aioboto3`
 - AI-powered PR code review via Claude Code CLI
 - GitHub API integration for fetching diffs and posting comments
@@ -34,7 +34,7 @@ full data flow.
 
 - Python 3.12+
 - AWS IAM role with SNS publish permissions
-- GitHub/Jira webhook secrets for signature verification
+- GitHub webhook secret for signature verification
 
 ## Installation
 
@@ -55,9 +55,7 @@ cp .env.example .env  # Configure environment variables
 | `LOG_LEVEL` | No | `INFO` | Logging level |
 | `AWS_REGION` | No | `us-east-1` | AWS region |
 | `GITHUB_SNS_TOPIC_ARN` | Yes | - | SNS topic for GitHub events |
-| `JIRA_SNS_TOPIC_ARN` | Yes | - | SNS topic for Jira events |
 | `GITHUB_WEBHOOK_SECRET` | Yes | - | GitHub signature secret |
-| `JIRA_WEBHOOK_SECRET` | Yes | - | Jira signature secret |
 | `GITHUB_BASE_URL` | No | `https://api.github.com` | GitHub API URL |
 | `GITHUB_TOKEN` | No | - | GitHub personal access token |
 | `GITHUB_API_TIMEOUT` | No | `30.0` | GitHub API timeout |
@@ -78,7 +76,6 @@ cp .env.example .env  # Configure environment variables
 | `GET` | `/health/startup` | Kubernetes startup probe |
 | `POST` | `/webhooks/github` | Receive GitHub webhook, publish to SNS |
 | `POST` | `/webhooks/github/review` | Trigger AI code review on a PR |
-| `POST` | `/webhooks/jira` | Receive Jira webhook, publish to SNS |
 
 ## Usage
 
@@ -135,17 +132,14 @@ api-webhook/
 │   │   ├── github_user.py
 │   │   ├── github_repository.py
 │   │   ├── github_ref.py
-│   │   ├── jira_event.py        # Jira webhook models
 │   │   └── pr_review.py         # Code review models
 │   ├── routers/                 # FastAPI route handlers
 │   │   ├── home.py              # Root endpoint
 │   │   ├── health.py            # Health check endpoints
-│   │   ├── github.py            # GitHub webhook handlers
-│   │   └── jira.py              # Jira webhook handlers
+│   │   └── github.py            # GitHub webhook handlers
 │   ├── services/                # Business logic
 │   │   ├── sns_publisher.py     # AWS SNS publishing
 │   │   ├── github_signature.py  # HMAC-SHA256 verification
-│   │   ├── jira_signature.py    # HMAC-SHA256 verification
 │   │   ├── github_api.py        # GitHub REST API client
 │   │   └── claude_code_reviewer.py  # Claude Code CLI
 │   └── exceptions/              # Custom exceptions

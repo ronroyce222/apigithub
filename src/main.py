@@ -10,7 +10,7 @@ from fastapi import FastAPI
 
 from config import get_settings
 from logging_config import get_logger, setup_logging
-from routers import github, health, jira, home
+from routers import github, health, home
 from version import __version__
 from dotenv import load_dotenv
 
@@ -80,7 +80,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Webhook Server",
-        description="FastAPI server for GitHub and Jira webhooks",
+        description="FastAPI server for GitHub webhooks",
         version=__version__,
         debug=True,
         lifespan=lifespan,
@@ -91,7 +91,6 @@ def create_app() -> FastAPI:
     app.include_router(home.router)
     app.include_router(health.router)
     app.include_router(github.router)
-    app.include_router(jira.router)
 
     return app
 

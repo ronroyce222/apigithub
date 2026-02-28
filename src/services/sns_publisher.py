@@ -136,34 +136,3 @@ class SNSPublisher:
             attributes,
         )
 
-    async def publish_jira_event(
-        self,
-        event_type: str,
-        payload: dict[str, Any],
-    ) -> str | None:
-        """Publish a Jira webhook event to SNS.
-
-        Args:
-            event_type: The Jira event type (e.g., jira:issue_created).
-            payload: The webhook payload as a dictionary.
-
-        Returns:
-            The SNS message ID if successful, None otherwise.
-        """
-        message = json.dumps(payload)
-        attributes = {
-            "source": {
-                "DataType": "String",
-                "StringValue": "jira",
-            },
-            "event_type": {
-                "DataType": "String",
-                "StringValue": event_type,
-            },
-        }
-
-        return await self._publish_with_retry(
-            self._settings.jira_sns_topic_arn,
-            message,
-            attributes,
-        )

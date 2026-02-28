@@ -2,7 +2,7 @@
 
 ## Overview
 
-FastAPI server that receives webhook events from GitHub and Jira, then publishes them to separate SNS topics for downstream processing.
+FastAPI server that receives webhook events from GitHub, then publishes them to SNS topics for downstream processing.
 
 ## Endpoints
 
@@ -80,30 +80,6 @@ Triggers an AI-powered code review for a GitHub pull request.
 }
 ```
 
-### Jira Webhook
-
-**POST /webhooks/jira**
-
-Receives Jira webhook events and publishes to SNS.
-
-**Headers:**
-| Header | Required | Description |
-|--------|----------|-------------|
-| X-Atlassian-Webhook-Signature | Yes | HMAC-SHA256 signature |
-| Content-Type | Yes | application/json |
-
-**Response:**
-```json
-{
-  "status": "accepted",
-  "message_id": "sns-message-id-456"
-}
-```
-
-**Error Responses:**
-- `401 Unauthorized`: Invalid or missing signature
-- `500 Internal Server Error`: Failed to publish to SNS
-
 ## Configuration
 
 Environment variables:
@@ -116,9 +92,7 @@ Environment variables:
 | LOG_LEVEL | No | INFO | Logging level |
 | AWS_REGION | No | us-east-1 | AWS region |
 | GITHUB_SNS_TOPIC_ARN | Yes | - | SNS topic for GitHub |
-| JIRA_SNS_TOPIC_ARN | Yes | - | SNS topic for Jira |
 | GITHUB_WEBHOOK_SECRET | Yes | - | GitHub signature secret |
-| JIRA_WEBHOOK_SECRET | Yes | - | Jira signature secret |
 | GITHUB_BASE_URL | No | https://api.github.com | GitHub API URL |
 | GITHUB_TOKEN | No | - | GitHub personal access token |
 | GITHUB_API_TIMEOUT | No | 30.0 | GitHub API timeout |

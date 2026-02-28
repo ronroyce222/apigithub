@@ -3,8 +3,8 @@
 ## Overview
 
 The API Webhook service is a FastAPI-based application that receives webhook
-events from GitHub and Jira, validates their signatures, and publishes them
-to AWS SNS topics for downstream processing. It also provides AI-powered code
+events from GitHub, validates their signatures, and publishes them to AWS
+SNS topics for downstream processing. It also provides AI-powered code
 review capabilities using Claude Code CLI.
 
 ## System Architecture
@@ -13,11 +13,11 @@ review capabilities using Claude Code CLI.
 +---------------------------------------------------------------------------+
 |                           External Services                               |
 +---------------------------------------------------------------------------+
-|  GitHub                  Jira Server              Claude Code CLI          |
-|  (Webhooks)              (Webhooks)               (Code Review)           |
-+--------+---------------------+---------------------------+---------------+
-         |                     |                           |
-         v                     v                           v
+|  GitHub                              Claude Code CLI                      |
+|  (Webhooks)                          (Code Review)                       |
++--------+-------------------------------------+---------------------------+
+         |                                     |
+         v                                     v
 +---------------------------------------------------------------------------+
 |                        FastAPI Application                                 |
 |                           (main.py)                                       |
@@ -28,10 +28,7 @@ review capabilities using Claude Code CLI.
 |  |  GET /            |  |  GET /health/*   |  |  POST /webhooks/github  | |
 |  +-------------------+  +------------------+  |  POST /webhooks/github/ | |
 |                                               |       review            | |
-|  +---------------------------------------+   +-------------------------+ |
-|  |         Jira Router                   |                               |
-|  |    POST /webhooks/jira                |                               |
-|  +---------------------------------------+                               |
+|                                               +-------------------------+ |
 |                                                                           |
 +-------+-------------------------+-------------------------+--------------+
         |                         |                         |
@@ -66,17 +63,14 @@ api-webhook/
 │   │   ├── github_user.py
 │   │   ├── github_repository.py
 │   │   ├── github_ref.py
-│   │   ├── jira_event.py        # Jira webhook models
 │   │   └── pr_review.py         # Code review models
 │   ├── routers/                  # FastAPI route handlers
 │   │   ├── home.py              # Root endpoint
 │   │   ├── health.py            # Health check endpoints
-│   │   ├── github.py            # GitHub webhook handlers
-│   │   └── jira.py              # Jira webhook handlers
+│   │   └── github.py            # GitHub webhook handlers
 │   ├── services/                 # Business logic services
 │   │   ├── sns_publisher.py     # AWS SNS publishing
 │   │   ├── github_signature.py  # GitHub signature verification
-│   │   ├── jira_signature.py    # Jira signature verification
 │   │   ├── github_api.py        # GitHub REST API client
 │   │   └── claude_code_reviewer.py
 │   └── exceptions/               # Custom exceptions
@@ -105,7 +99,7 @@ The application uses FastAPI's lifespan context manager for startup/shutdown:
 
 2. **Application Factory:**
    - Creates FastAPI instance with custom lifespan
-   - Registers routers: home, health, github, jira
+   - Registers routers: home, health, github
    - Configures OpenAPI metadata
 
 ### Configuration Management
@@ -121,7 +115,7 @@ Uses Pydantic `BaseSettings` for type-safe configuration:
 Key configuration groups:
 - Server settings (host, port, debug)
 - AWS settings (region, SNS topic ARNs)
-- Webhook secrets (GitHub, Jira)
+- Webhook secrets (GitHub)
 - GitHub API credentials (token)
 - Claude Code settings
 - Feature flags
@@ -153,12 +147,6 @@ Custom `SyslogFormatter` provides:
 | `POST /webhooks/github` | Receive webhook, publish to SNS |
 | `POST /webhooks/github/review` | Trigger AI code review |
 
-#### Jira Endpoints (`src/routers/jira.py`)
-
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /webhooks/jira` | Receive webhook, publish to SNS |
-
 ### Services
 
 #### SNS Publisher (`src/services/sns_publisher.py`)
@@ -172,7 +160,6 @@ Custom `SyslogFormatter` provides:
 #### Signature Verifiers
 
 - `GitHubSignatureVerifier`: HMAC-SHA256 with `X-Hub-Signature-256`
-- `JiraSignatureVerifier`: HMAC-SHA256 with `X-Atlassian-Webhook-Signature`
 
 #### GitHub API Client (`src/services/github_api.py`)
 
@@ -193,7 +180,7 @@ Custom `SyslogFormatter` provides:
 ### Webhook Processing Flow
 
 ```
-1. Webhook received (GitHub/Jira)
+1. Webhook received (GitHub)
           |
           v
 2. Extract signature from headers
@@ -257,11 +244,6 @@ Custom `SyslogFormatter` provides:
 - `PRReviewRequest`: Code review request parameters
 - `PRReviewResponse`: Code review result
 
-### Jira Models (`src/models/jira_event.py`)
-
-- `JiraEvent`: Webhook event payload
-- `JiraWebhookResponse`: SNS publish response
-
 ### PR Review Models (`src/models/pr_review.py`)
 
 - `ReviewSeverity`: Enum (INFO, WARNING, ERROR, CRITICAL)
@@ -277,9 +259,8 @@ Custom `SyslogFormatter` provides:
 - **Auth:** IAM roles (no stored credentials)
 - **Topics:**
   - GitHub events: `GITHUB_SNS_TOPIC_ARN`
-  - Jira events: `JIRA_SNS_TOPIC_ARN`
 - **Message Attributes:**
-  - `source`: "github" or "jira"
+  - `source`: "github"
   - `event_type`: Event identifier (e.g., "pull_request")
 
 ### GitHub API

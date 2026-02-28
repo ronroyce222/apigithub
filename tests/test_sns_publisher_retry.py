@@ -19,9 +19,7 @@ def settings() -> Settings:
     return Settings(
         aws_region="us-east-1",
         github_sns_topic_arn="arn:aws:sns:us-east-1:123:github",
-        jira_sns_topic_arn="arn:aws:sns:us-east-1:123:jira",
         github_webhook_secret="test-secret",
-        jira_webhook_secret="test-secret",
         use_localstack=False,
     )
 
@@ -32,9 +30,7 @@ def settings_no_localstack() -> Settings:
     return Settings(
         aws_region="us-west-2",
         github_sns_topic_arn="arn:aws:sns:us-west-2:123:github",
-        jira_sns_topic_arn="arn:aws:sns:us-west-2:123:jira",
         github_webhook_secret="secret",
-        jira_webhook_secret="secret",
         use_localstack=False,
     )
 
@@ -144,39 +140,6 @@ async def test_publish_with_retry_max_retries_exceeded(
                 {"data": "value"},
             )
 
-    assert mock_sns.publish.call_count == 2
-
-
-@pytest.mark.asyncio
-async def test_publish_jira_with_retry(settings: Settings) -> None:
-    """Test Jira publish with retry logic."""
-    publisher = SNSPublisher(settings)
-    publisher._base_delay = 0.01
-
-    mock_sns = AsyncMock()
-    error_response = {"Error": {"Code": "Throttling"}}
-    mock_sns.publish = AsyncMock(
-        side_effect=[
-            ClientError(error_response, "Publish"),
-            {"MessageId": "jira-msg-123"},
-        ]
-    )
-
-    mock_context = AsyncMock()
-    mock_context.__aenter__ = AsyncMock(return_value=mock_sns)
-    mock_context.__aexit__ = AsyncMock(return_value=None)
-
-    with patch.object(
-        publisher._session,
-        "client",
-        return_value=mock_context,
-    ):
-        result = await publisher.publish_jira_event(
-            "jira:issue_created",
-            {"issue": {"key": "TEST-1"}},
-        )
-
-    assert result == "jira-msg-123"
     assert mock_sns.publish.call_count == 2
 
 
