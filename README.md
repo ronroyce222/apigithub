@@ -1,5 +1,7 @@
 # apigithub
 
+Version 2
+
 FastAPI server that receives webhook events from GitHub,
 validates their signatures, and publishes them to AWS SNS topics for
 downstream processing by
