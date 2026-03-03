@@ -1,7 +1,7 @@
 # Web framework
 fastapi>=0.115.0
 uvicorn==0.21.1
-gunicorn==20.1.0
+gunicorn>=23.0.0
 # AWS
 aioboto3>=13.2.0
 botocore>=1.35.0
@@ -29,3 +29,5 @@ mysqlclient==2.2.7
 aiomysql==0.3.2
 setuptools 
 wheel
+uvicorn-0.41.0
+

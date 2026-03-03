@@ -1,0 +1,21 @@
+name: Deploy to Local Minikube
+on: [push]
+
+jobs:
+  deploy:
+    # Use the label assigned to your self-hosted runner
+    runs-on: self-hosted 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Verify Minikube status
+        run: minikube status -p minikube-local
+        
+      - name: Deploy application
+        run: kubectl apply -f kubernetes-manifest.yaml -p minikube-local
+        
+      - name: Verify deployment
+        run: kubectl get pods -p minikube-local
+
+

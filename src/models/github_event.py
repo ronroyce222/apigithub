@@ -36,6 +36,10 @@ class GitHubWebhookResponse(BaseModel):
         default=None,
         description="SNS message ID if published",
     )
+    event_type: str | None = Field(
+        default=None,
+        description="GitHub event type received",
+    )
 
 
 class PRReviewRequest(BaseModel):

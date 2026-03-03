@@ -1,6 +1,7 @@
 """Application configuration using Pydantic Settings."""
 
 from functools import lru_cache
+from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -40,7 +41,7 @@ class Settings(BaseSettings):
         ...,
         description="Secret for GitHub webhook signature verification",
     )
-    localstack_endpoint: str = Field(
+    localstack_endpoint: Optional[str] = Field(
         default=None,
         description="LocalStack endpoint URL for testing",
     )
@@ -79,6 +80,22 @@ class Settings(BaseSettings):
     code_review_enabled: bool = Field(
         default=True,
         description="Enable PR code review functionality",
+    )
+
+    # SSL settings
+    ssl_certfile: Optional[str] = Field(
+        default=None,
+        description="Path to SSL certificate file",
+    )
+    ssl_keyfile: Optional[str] = Field(
+        default=None,
+        description="Path to SSL private key file",
+    )
+
+    # Event store settings
+    event_store_max_size: int = Field(
+        default=100,
+        description="Max events to retain in memory",
     )
 
 

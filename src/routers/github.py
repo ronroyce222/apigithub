@@ -27,6 +27,7 @@ from services.claude_code_reviewer import (
     ClaudeCodeError,
     ClaudeCodeReviewer,
 )
+from services.event_store import get_event_store
 from services.sns_publisher import SNSPublisher
 
 logger = get_logger(__name__)
@@ -83,6 +84,9 @@ async def handle_github_webhook(
     x_hub_signature_256: Annotated[
         str | None, Header()
     ] = None,
+    x_github_delivery: Annotated[
+        str | None, Header()
+    ] = None,
 ) -> GitHubWebhookResponse:
     """Handle incoming GitHub webhook events.
 
@@ -123,7 +127,16 @@ async def handle_github_webhook(
     )
 
     logger.info(
-        "Received GitHub event: type=%s", event_type,
+        "Received GitHub event: type=%s, payload=%s",
+        event_type,
+        payload,
+    )
+
+    store = get_event_store()
+    store.add(
+        event_type=event_type,
+        payload=payload,
+        delivery_id=x_github_delivery or "",
     )
 
     if "pull_request" in payload:
@@ -160,6 +173,7 @@ async def handle_github_webhook(
             return GitHubWebhookResponse(
                 status="accepted",
                 message_id=message_id,
+                event_type=event_type,
             )
 
         logger.error(

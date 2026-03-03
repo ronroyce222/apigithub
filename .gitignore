@@ -56,3 +56,8 @@ Thumbs.db
 .localstack/
 
 claude.md
+certs/*
+ssl/*
+k8s/*
+dockerhub-login.txt
+*.pem

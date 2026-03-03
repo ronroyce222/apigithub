@@ -1,0 +1,112 @@
+name: CI/CD - GHCR and Minikube
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ronroyce-repo
+  MINIKUBE_PROFILE: minikube-local
+
+jobs:
+  build-and-push:
+    name: Build and Push to GHCR
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=pr
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Display image details
+        run: |
+          echo "Image tags: ${{ steps.meta.outputs.tags }}"
+          echo "Image digest: ${{ steps.build.outputs.digest }}"
+
+  deploy:
+    name: Deploy to Minikube
+    needs: build-and-push
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Minikube is running
+        run: |
+          minikube status --profile ${{ env.MINIKUBE_PROFILE }}
+
+      - name: Configure kubectl for Minikube
+        run: |
+          minikube update-context --profile ${{ env.MINIKUBE_PROFILE }}
+
+      - name: Pull image into Minikube
+        run: |
+          minikube image pull \
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest \
+            --profile ${{ env.MINIKUBE_PROFILE }}
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Wait for rollout to complete
+        run: |
+          kubectl rollout status deployment/apigithub \
+            --timeout=120s
+
+      - name: Restart deployment to pick up latest image
+        run: |
+          kubectl rollout restart deployment/apigithub
+          kubectl rollout status deployment/apigithub \
+            --timeout=120s
+
+      - name: Verify deployment
+        run: |
+          echo "--- Pods ---"
+          kubectl get pods -l app=apigithub -o wide
+          echo ""
+          echo "--- Services ---"
+          kubectl get services -l app=apigithub
+          echo ""
+          echo "--- Deployment ---"
+          kubectl describe deployment apigithub

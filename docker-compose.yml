@@ -1,28 +1,59 @@
-version: "3.8"
-
 services:
-  localstack:
-    image: localstack/localstack:latest
-    container_name: localstack-rroyce
+  apigithub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apigithub
+    restart: unless-stopped
     ports:
-      - "4566:4566"
+      - "443:443"
     environment:
-      - SERVICES=sns,sqs
-      - DEBUG=0
-      - AWS_DEFAULT_REGION=us-east-1
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - LOCALSTACK_HOST=localstack-rroyce
-      - MAIN_CONTAINER_NAME=localstack-rroyce
-    volumes:
-      - "./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
-      - "localstack_data:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - HOST=0.0.0.0
+      - PORT=443
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - GITHUB_SNS_TOPIC_ARN=${GITHUB_SNS_TOPIC_ARN}
+      - GITHUB_SQS_QUEUE_URL=${GITHUB_SQS_QUEUE_URL:-}
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_BASE_URL=${GITHUB_BASE_URL:-https://api.github.com}
+      - GITHUB_API_TIMEOUT=${GITHUB_API_TIMEOUT:-30.0}
+      - CLAUDE_CODE_PATH=${CLAUDE_CODE_PATH:-}
+      - CLAUDE_CODE_MODEL=${CLAUDE_CODE_MODEL:-}
+      - CLAUDE_CODE_TIMEOUT=${CLAUDE_CODE_TIMEOUT:-300.0}
+      - CODE_REVIEW_ENABLED=${CODE_REVIEW_ENABLED:-true}
+      - SSL_CERTFILE=/app/ssl/cert.pem
+      - SSL_KEYFILE=/app/ssl/key.pem
+      - EVENT_STORE_MAX_SIZE=${EVENT_STORE_MAX_SIZE:-100}
+      - USE_LOCALSTACK=false
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-volumes:
-  localstack_data:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('https://localhost:443/health', context=__import__('ssl')._create_unverified_context())",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
+    security_opt:
+      - no-new-privileges:true

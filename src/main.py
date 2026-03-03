@@ -10,7 +10,7 @@ from fastapi import FastAPI
 
 from config import get_settings
 from logging_config import get_logger, setup_logging
-from routers import github, health, home
+from routers import github, github_events, health, home
 from version import __version__
 from dotenv import load_dotenv
 
@@ -91,11 +91,12 @@ def create_app() -> FastAPI:
     app.include_router(home.router)
     app.include_router(health.router)
     app.include_router(github.router)
+    app.include_router(github_events.router)
 
     return app
 
 
-logger.error("Creating app")
+logger.info("Creating app")
 
 app = create_app()
 
@@ -103,9 +104,16 @@ app = create_app()
 if __name__ == "__main__":
     settings = get_settings()
     pprint(settings)
+
+    ssl_kwargs: dict = {}
+    if settings.ssl_certfile and settings.ssl_keyfile:
+        ssl_kwargs["ssl_certfile"] = settings.ssl_certfile
+        ssl_kwargs["ssl_keyfile"] = settings.ssl_keyfile
+
     uvicorn.run(
         "main:app",
         host=settings.host,
         port=settings.port,
-        reload=settings.debug,
+        reload=True,
+        **ssl_kwargs,
     )
